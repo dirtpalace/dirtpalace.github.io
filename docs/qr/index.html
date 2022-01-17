@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home QR Thinger</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" integrity="sha384-Dr98ddmUw2QkdCarNQ+OL7xLty7cSxgR0T7v1tq4UErS/qLV0132sBYTolRAFuOV" crossorigin="anonymous"></script>
+</head>
+<body>
+    <template id="template-loading">
+        <div class="loading">Redirecting...</div>
+    </template>
+
+    <template id="template-section">
+        <section>
+            <h2 class="name"></h2>
+            <div class="qr-items">
+                <template id="template-item">
+                    <div class="qr-item">
+                        <a class="qr-link" target="_blank" href="#">
+                            <img class="qr-image" src="" />
+                            <canvas class="qr-canvas"></canvas>
+                        </a>
+                        <div class="name"></div>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </template>
+
+    <script type="text/javascript">
+        (async function() {
+            const [config, dataSources] = await Promise.all([
+                fetch("./config.json").then(r => r.json()),
+                fetch("./data-sources.json").then(r => r.json()),
+            ]);
+
+            async function main(config, dataSources) {
+                const request = getRequest();
+                const sectionData = await getSectionData({request: request, dataSources: dataSources});
+                const redirectMap = buildRedirectMap(sectionData);
+                if (redirectMap[request.redirect] && redirectMap[request.redirect].length === 1) {
+                    window.location.href = redirectMap[request.redirect][0];
+                    const loadingTemplate = document.querySelector(config.queries.loadingTemplate)
+                    loadingTemplate.before(loadingTemplate.content.cloneNode(true));
+                }
+                displaySections({sectionData: sectionData});
+            }
+
+            function getRequest() {
+                const parameters = new URLSearchParams(window.location.search);
+                const redirect = parameters.get("redirect")
+                const sections = parameters.get("sections")
+                    ? parameters.get("sections").split(",")
+                    : Array.from(Object.keys(dataSources))
+                return {redirect: redirect, sections: sections}
+            }
+
+            async function getSectionData({request, dataSources}) {
+                const itemFilter = i => {
+                    return !request.redirect || i.name === request.redirect;
+                }
+                const sectionFilter = s => s.items.length && request.sections.includes(s.name);
+
+                const sections = await Promise.all(
+                    Object.keys(dataSources).map(
+                        sectionName => fetchSection({
+                            name: sectionName,
+                            url: dataSources[sectionName],
+                            itemFilter: itemFilter
+                        })
+                    )
+                );
+                return sections.filter(sectionFilter);
+            }
+
+            function buildRedirectMap(sectionData) {
+                return sectionData.reduce(
+                    (a, section) => a.concat(...section.items),
+                    []
+                ).reduce((m, item) => {
+                    m[item.name] = (m[item.name] || []).concat(item.url);
+                    return m;
+                }, {});
+            }
+
+            async function displaySections({sectionData}) {
+                const sectionTemplate = document.querySelector(config.queries.sectionTemplate);
+                let sections = Object.keys(sectionData).map(sectionName => applySectionTemplate({
+                    template: sectionTemplate,
+                    data: sectionData[sectionName],
+                }));
+                sectionTemplate.before(...sections);
+            }
+
+            function applyQR(element, value) {
+                return new QRious({
+                    element: element,
+                    value: value,
+                    size: 2 * element.width,
+                })
+            }
+
+            function applySimpleTemplate({template, row}) {
+                let element = template.content.cloneNode(true);
+                Object.keys(row).forEach(k => {
+                    element.querySelectorAll(`.${k}`).forEach(e => {
+                        e.innerText = row[k];
+                    });
+                });
+                return element;
+            }
+
+            function applyItemTemplate({template, row}) {
+                let item = applySimpleTemplate({template: template, row: row})
+                item.querySelectorAll(config.queries.image).forEach(e => {
+                    e.src = row.imageSrc;
+                });
+                item.querySelectorAll(config.queries.link).forEach(e => {
+                    e.href = row.url;
+                });
+                item.querySelectorAll(config.queries.canvas).forEach(e => {
+                    applyQR(e, new URL(`?redirect=${row.name}`, config.baseURL).href);
+                });
+                return item;
+            }
+
+            function applySectionTemplate({template, data}) {
+                let section = applySimpleTemplate({template: template, row: data});
+                let itemTemplate = section.querySelector(config.queries.itemTemplate);
+                let itemElements = data.items.map(row => applyItemTemplate({
+                    config: config,
+                    template: itemTemplate,
+                    row: row,
+                }));
+                // stick items in the DOM
+                itemTemplate.before(...itemElements);
+                return section
+            }
+
+            async function fetchTsv(url) {
+                const ROW_SEPARATOR = "\n";
+                const COLUMN_SEPARATOR = "\t";
+                function rowToObject(row, header) {
+                    return Object.assign({}, ...row.split(COLUMN_SEPARATOR).map(
+                        (v, i) => ({[header[i]]: v}))
+                    );
+                }
+
+                let text = await fetch(url).then(response => response.text());
+
+                // let response = await fetch(url);
+                let [header, ...content] = text.split(ROW_SEPARATOR).filter(line => line.trim());
+                if (!content.length) {
+                    return [];
+                }
+                header = header.split(COLUMN_SEPARATOR);
+                return content.map(row => rowToObject(row, header));
+            }
+
+            function fetchSection({name, url, itemFilter}) {
+                return fetchTsv(url).then(items => ({
+                    name: name,
+                    items: items.filter(itemFilter),
+                }));
+            }
+
+            main(config, dataSources);
+        })();
+    </script>
+</body>
+</html>

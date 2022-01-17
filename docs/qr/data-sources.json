@@ -1,0 +1,9 @@
+{
+  "produce": "./data/produce.tsv",
+  "fridge": "./data/fridge.tsv",
+  "beverages": "./data/beverages.tsv",
+  "freezer": "./data/freezer.tsv",
+  "pantry": "./data/pantry.tsv",
+  "household": "./data/household.tsv",
+  "snacks": "./data/snacks.tsv"
+}

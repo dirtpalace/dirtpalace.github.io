@@ -1,0 +1,11 @@
+{
+  "baseURL": "https://dirtpalace.github.io/qr",
+  "queries": {
+    "loadingTemplate": "#template-loading",
+    "itemTemplate": "#template-item",
+    "sectionTemplate": "#template-section",
+    "link": "a",
+    "image": "img",
+    "canvas": "canvas"
+  }
+}
