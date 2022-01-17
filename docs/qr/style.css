@@ -14,8 +14,10 @@ body {
     display: inline-block;
     vertical-align: top;
 }
+
 .qr-item .name {
     font-size: small;
+    font-weight: bold;
 }
 
 .qr-item canvas {
