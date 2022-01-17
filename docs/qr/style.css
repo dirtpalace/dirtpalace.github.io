@@ -18,6 +18,7 @@ body {
 .qr-item .name {
     font-size: small;
     font-weight: bold;
+    line-height: 1.4em;
 }
 
 .qr-item canvas {
@@ -35,8 +36,11 @@ body {
     .qr-item:hover img {
         display: none;
     }
-    .qr-item:hover canvas {
+    .qr-item:hover canvas.qr-canvas-screen {
         display: block;
+    }
+    .qr-item canvas.print {
+        display: none!important;
     }
 
     section .qr-items {
@@ -44,40 +48,55 @@ body {
         flex-wrap: wrap;
     }
 }
+
 @media print {
-    .qr-item img {
-        display: none;
-    }
-    .qr-item canvas {
-        display: block;
-    }
     section {
         page-break-after: always;
     }
-    /*section {*/
-    /*    page-break-after: always;*/
-    /*    page-break-inside: avoid;*/
-    /*}*/
-    .qr-items {
-        display: block;
 
+    .qr-items {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        justify-content: stretch;
+        flex-direction: row;
+        flex-wrap: wrap;
         page-break-before: avoid;
     }
-    /*.qr-items {*/
-    /*    page-break-before: avoid;*/
-    /*    page-break-inside: auto;*/
-    /*}*/
+
     .qr-item {
-        display: inline-block;
+        display: grid;
+        align-self: stretch;
+        grid-template-columns: 3rem auto;
+        column-gap: 1rem;
+        width: auto;
+        height: 56px;
+        text-align: left;
         page-break-inside: avoid;
         page-break-after: auto;
+        border: 0.5px dashed #dddddd;
+        margin: 0;
+    }
+
+    .qr-item img {
+        display: none;
+    }
+
+    a {
+        display: none;
+    }
+
+    .qr-item canvas.qr-canvas-print {
+        display: inline-block;
+        align-self: center;
+        height: 48px;
+        width: 48px;
+        margin: 0 0 0 4px;
+    }
+
+    .qr-item .name {
+        align-self: center;
     }
 }
-
-.qr-item .name {
-    line-height: 1.4em;
-}
-
 
 @media screen {
     .loading::before {
