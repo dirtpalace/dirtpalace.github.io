@@ -5,9 +5,26 @@
     <title>Home QR Thinger</title>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript" integrity="sha384-ROLanEgKi5iw14sYEBbgSD9LT5dTGm8hPv/0bI+dlALXtvgNExymiVLnGom0dda5" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" integrity="sha384-Dr98ddmUw2QkdCarNQ+OL7xLty7cSxgR0T7v1tq4UErS/qLV0132sBYTolRAFuOV" crossorigin="anonymous"></script>
 </head>
 <body>
+    <div id="qr-scanner" style="height: 300px; width: 300px;"></div>
+    <script type="module">
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-scanner",
+            {
+                fps: 10,
+                qrbox: {width: 100, height: 100},
+                rememberLastUsedCamera: true,
+                // Only support camera scan type.
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+            }
+        );
+        html5QrcodeScanner.render((url) => window.location.href = url);
+    </script>
+
     <template id="template-loading">
         <div class="loading">Redirecting...</div>
     </template>

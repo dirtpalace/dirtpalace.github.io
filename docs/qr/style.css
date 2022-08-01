@@ -50,6 +50,10 @@ body {
 }
 
 @media print {
+    #qr-scanner {
+        display: none;
+    }
+
     section {
         page-break-after: always;
     }
