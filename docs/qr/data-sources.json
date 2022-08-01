@@ -1,4 +1,5 @@
 {
+  "new": "./data/new.tsv",
   "produce": "./data/produce.tsv",
   "fridge": "./data/fridge.tsv",
   "beverages": "./data/beverages.tsv",
